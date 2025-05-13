@@ -63,7 +63,6 @@ df_total = pd.concat([df_completed, df_pending], ignore_index=True)
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["✅ Overview", "⏱ Time Analysis", "🌍 Country", "🧑 Retention", "🏪 Merchants & Users"])
 
 # ✅ Overview
-# ✅ Overview
 with tab1:
     st.header("📊 Summary Statistics")
 
@@ -88,7 +87,7 @@ with tab1:
     col3.metric("Users", df_pending["spend.userEmail"].nunique())
 
     # ✅ 상태 분포 확인
-    st.write("✅ 상태 분포:")
+    st.write("✅ status:")
     st.dataframe(df["spend.status"].value_counts())
 
     # ✅ 고급 지표 계산
