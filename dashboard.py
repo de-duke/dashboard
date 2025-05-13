@@ -115,7 +115,13 @@ with tab1:
     col1.metric("Recurring Users % (≥2 tx/week)", f"{recurring_pct:.1f}%")
     col2.metric("Top 3 Country Concentration", f"{top3_concentration:.1f}%")
 
+    # 주차 컬럼 생성 (week)
+    df["week"] = pd.to_datetime(df["date_utc"]).dt.to_period("W").astype(str)
 
+    # 주간 신규 사용자 수 계산
+    user_min_week = df.groupby("spend.userEmail")["week"].min()
+    weekly_new_users = user_min_week.value_counts().sort_index()
+    
 
     # 📅 Weekly New Users
     fig, ax = plt.subplots(figsize=(8, 3))  # 👈 크기 줄이기
