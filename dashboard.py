@@ -121,12 +121,18 @@ with tab1:
 
 st.subheader("📊 Weekly New Users & Total Spend")
 col1, col2 = st.columns(2)
+
 with col1:
     st.write("📅 Weekly New Users")
     st.line_chart(weekly_new_users)
+
 with col2:
     st.write("💸 Weekly Spend (USD)")
-    st.line_chart(weekly_spend)
+    weekly_spend_df = pd.DataFrame({
+        "Week": weekly_spend.index,
+        "Total Spend (USD)": weekly_spend.values
+    }).set_index("Week")
+    st.line_chart(weekly_spend_df)
 
 # ⏱ Time Analysis
 with tab2:
