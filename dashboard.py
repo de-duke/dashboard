@@ -63,10 +63,15 @@ df_total = pd.concat([df_completed, df_pending], ignore_index=True)
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["✅ Overview", "⏱ Time Analysis", "🌍 Country", "🧑 Retention", "🏪 Merchants & Users"])
 
 # ✅ Overview
+# ✅ Overview
 with tab1:
     st.header("📊 Summary Statistics")
+
+    # ✅ 전체 로드된 Supabase 원본 데이터 수
+    st.markdown(f"🔄 **Raw rows loaded from Supabase:** `{len(df):,}` rows")
+
     col1, col2, col3 = st.columns(3)
-    col1.metric("Total Transactions", len(df_total))
+    col1.metric("Total Processed Transactions", len(df_total))
     col2.metric("Total Volume (USD)", f"${df_total['spend.amount_usd'].sum():,.2f}")
     col3.metric("Unique Users", df_total["spend.userEmail"].nunique())
 
@@ -82,8 +87,45 @@ with tab1:
     col2.metric("Volume (USD)", f"${df_pending['spend.amount_usd'].sum():,.2f}")
     col3.metric("Users", df_pending["spend.userEmail"].nunique())
 
+    # ✅ 상태 분포 확인
     st.write("✅ 상태 분포:")
     st.dataframe(df["spend.status"].value_counts())
+
+    # ✅ 고급 지표 계산
+    st.subheader("📈 Advanced Summary")
+
+    # 주차 계산
+    df["week"] = pd.to_datetime(df["date_utc"]).dt.to_period("W").astype(str)
+
+    # Recurring user 계산
+    weekly_tx_count = df.groupby(["spend.userEmail", "week"]).size().reset_index(name="tx_count")
+    recurring_users = weekly_tx_count[weekly_tx_count["tx_count"] > 1]["spend.userEmail"].nunique()
+    total_users = df["spend.userEmail"].nunique()
+    recurring_pct = (recurring_users / total_users) * 100 if total_users else 0
+
+    # 지역 집중도 (Top 3 국가 트랜잭션 비율)
+    country_counts = df["spend.merchantCountry"].value_counts()
+    top3_concentration = (country_counts.head(3).sum() / country_counts.sum()) * 100 if not country_counts.empty else 0
+
+    col1, col2 = st.columns(2)
+    col1.metric("Recurring Users % (≥2 tx/week)", f"{recurring_pct:.1f}%")
+    col2.metric("Top 3 Country Concentration", f"{top3_concentration:.1f}%")
+
+    # ✅ 주간 신규 사용자 수
+    user_min_week = df.groupby("spend.userEmail")["week"].min()
+    weekly_new_users = user_min_week.value_counts().sort_index()
+
+    # ✅ 주간 총 지출
+    weekly_spend = df.groupby("week")["spend.amount_usd"].sum()
+
+    st.subheader("📊 Weekly New Users & Total Spend")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write("📅 Weekly New Users")
+        st.line_chart(weekly_new_users)
+    with col2:
+        st.write("💸 Weekly Spend (USD)")
+        st.line_chart(weekly_spend)
 
 # ⏱ Time Analysis
 with tab2:
