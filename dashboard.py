@@ -95,6 +95,7 @@ with tab1:
     st.subheader("📈 Advanced Summary")
 
     df["week"] = pd.to_datetime(df["date_utc"]).dt.to_period("W").astype(str)
+    weekly_tx_count = df.groupby(["spend.userEmail", "week"]).size().reset_index(name="tx_count")
 
     # 가장 최근 주만 추출
     latest_week = df["week"].max()
