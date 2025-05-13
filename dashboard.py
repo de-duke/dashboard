@@ -133,6 +133,9 @@ with tab1:
     ax.grid(True, linestyle='--', alpha=0.4)
     st.pyplot(fig)
 
+    # 💸 주간 총 지출
+    weekly_spend = df.groupby("week")["spend.amount_usd"].sum().sort_index()
+
     # 💸 Weekly Spend
     fig2, ax2 = plt.subplots(figsize=(8, 3))  # 👈 크기 줄이기
     weekly_spend.plot(ax=ax2, marker='o', color='green')
