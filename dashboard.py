@@ -110,21 +110,24 @@ with tab1:
     col1.metric("Recurring Users % (≥2 tx/week)", f"{recurring_pct:.1f}%")
     col2.metric("Top 3 Country Concentration", f"{top3_concentration:.1f}%")
 
-    # ✅ 주간 신규 사용자 수
-    user_min_week = df.groupby("spend.userEmail")["week"].min()
-    weekly_new_users = user_min_week.value_counts().sort_index()
+# ✅ 주간 신규 사용자 수
+user_min_week = df.groupby("spend.userEmail")["week"].min()
+weekly_new_users = user_min_week.value_counts().sort_index()
+weekly_new_users.index = pd.to_datetime(weekly_new_users.index).strftime("%b %d")
 
-    # ✅ 주간 총 지출
-    weekly_spend = df.groupby("week")["spend.amount_usd"].sum()
+# ✅ 주간 총 지출
+weekly_spend = df.groupby("week")["spend.amount_usd"].sum().sort_index()
+weekly_spend = weekly_spend.astype(float)
+weekly_spend.index = pd.to_datetime(weekly_spend.index).strftime("%b %d")
 
-    st.subheader("📊 Weekly New Users & Total Spend")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write("📅 Weekly New Users")
-        st.line_chart(weekly_new_users)
-    with col2:
-        st.write("💸 Weekly Spend (USD)")
-        st.line_chart(weekly_spend)
+st.subheader("📊 Weekly New Users & Total Spend")
+col1, col2 = st.columns(2)
+with col1:
+    st.write("📅 Weekly New Users")
+    st.line_chart(weekly_new_users)
+with col2:
+    st.write("💸 Weekly Spend (USD)")
+    st.line_chart(weekly_spend)
 
 # ⏱ Time Analysis
 with tab2:
