@@ -110,29 +110,26 @@ with tab1:
     col1.metric("Recurring Users % (≥2 tx/week)", f"{recurring_pct:.1f}%")
     col2.metric("Top 3 Country Concentration", f"{top3_concentration:.1f}%")
 
-    # 주간 신규 유저
-    user_min_week = df.groupby("spend.userEmail")["week"].min()
-    weekly_new_users = user_min_week.value_counts().sort_index()
-    weekly_new_users.index = weekly_new_users.index.astype(str).str[:10]
 
-    # 주간 지출
-    weekly_spend = df.groupby("week")["spend.amount_usd"].sum().sort_index()
-    weekly_spend.index = weekly_spend.index.astype(str).str[:10]
 
-st.subheader("📊 Weekly New Users & Total Spend")
-col1, col2 = st.columns(2)
+# weekly_new_users
+fig, ax = plt.subplots()
+weekly_new_users.plot(ax=ax, marker='o')
+ax.set_title("Weekly New Users")
+ax.set_xlabel("Week")
+ax.set_ylabel("Users")
+plt.xticks(rotation=45)
+st.pyplot(fig)
 
-with col1:
-    st.write("📅 Weekly New Users")
-    st.line_chart(weekly_new_users)
-
-with col2:
-    st.write("💸 Weekly Spend (USD)")
-    weekly_spend_df = pd.DataFrame({
-        "Week": weekly_spend.index,
-        "Total Spend (USD)": weekly_spend.values
-    }).set_index("Week")
-    st.line_chart(weekly_spend_df)
+# weekly_spend
+fig2, ax2 = plt.subplots()
+weekly_spend.plot(ax=ax2, marker='o', color='green')
+ax2.set_title("Weekly Spend (USD)")
+ax2.set_xlabel("Week")
+ax2.set_ylabel("USD")
+ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+plt.xticks(rotation=45)
+st.pyplot(fig2)
 
 # ⏱ Time Analysis
 with tab2:
