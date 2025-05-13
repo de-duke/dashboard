@@ -94,6 +94,8 @@ with tab1:
     # ✅ 고급 지표 계산
     st.subheader("📈 Advanced Summary")
 
+    df["week"] = pd.to_datetime(df["date_utc"]).dt.to_period("W").astype(str)
+
     # 가장 최근 주만 추출
     latest_week = df["week"].max()
     latest_week_df = weekly_tx_count[weekly_tx_count["week"] == latest_week]
