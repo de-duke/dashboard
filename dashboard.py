@@ -94,15 +94,15 @@ with tab1:
     # ✅ 고급 지표 계산
     st.subheader("📈 Advanced Summary")
 
-# 가장 최근 주만 추출
-latest_week = df["week"].max()
-latest_week_df = weekly_tx_count[weekly_tx_count["week"] == latest_week]
+    # 가장 최근 주만 추출
+    latest_week = df["week"].max()
+    latest_week_df = weekly_tx_count[weekly_tx_count["week"] == latest_week]
 
-# 2회 이상 사용한 유저 수
-recurring_users = latest_week_df[latest_week_df["tx_count"] >= 2]["spend.userEmail"].nunique()
-total_users = latest_week_df["spend.userEmail"].nunique()
+    # 2회 이상 사용한 유저 수
+    recurring_users = latest_week_df[latest_week_df["tx_count"] >= 2]["spend.userEmail"].nunique()
+    total_users = latest_week_df["spend.userEmail"].nunique()
 
-recurring_pct = (recurring_users / total_users) * 100 if total_users else 0
+    recurring_pct = (recurring_users / total_users) * 100 if total_users else 0
 
     # 지역 집중도 (Top 3 국가 트랜잭션 비율)
     country_counts = df["spend.merchantCountry"].value_counts()
