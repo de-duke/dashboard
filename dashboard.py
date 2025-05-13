@@ -117,31 +117,26 @@ with tab1:
 
 
 
-# 1. 주간 신규 유저 수
-user_min_week = df.groupby("spend.userEmail")["week"].min()
-weekly_new_users = user_min_week.value_counts().sort_index()
+    # 📅 Weekly New Users
+    fig, ax = plt.subplots(figsize=(8, 3))  # 👈 크기 줄이기
+    weekly_new_users.plot(ax=ax, marker='o', color='steelblue')
+    ax.set_title("Weekly New Users", fontsize=14)
+    ax.set_xlabel("Week", fontsize=10)
+    ax.set_ylabel("Users", fontsize=10)
+    ax.tick_params(axis='x', labelrotation=30, labelsize=9)
+    ax.grid(True, linestyle='--', alpha=0.4)
+    st.pyplot(fig)
 
-fig1, ax1 = plt.subplots()
-weekly_new_users.plot(ax=ax1, marker='o', color='steelblue')
-ax1.set_title("Weekly New Users")
-ax1.set_xlabel("Week")
-ax1.set_ylabel("Users")
-ax1.grid(True, linestyle='--', alpha=0.4)
-plt.xticks(rotation=45)
-st.pyplot(fig1)
-
-# 2. 주간 지출
-weekly_spend = df.groupby("week")["spend.amount_usd"].sum().sort_index()
-
-fig2, ax2 = plt.subplots()
-weekly_spend.plot(ax=ax2, marker='o', color='green')
-ax2.set_title("Weekly Spend (USD)")
-ax2.set_xlabel("Week")
-ax2.set_ylabel("USD")
-ax2.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
-ax2.grid(True, linestyle='--', alpha=0.4)
-plt.xticks(rotation=45)
-st.pyplot(fig2)
+    # 💸 Weekly Spend
+    fig2, ax2 = plt.subplots(figsize=(8, 3))  # 👈 크기 줄이기
+    weekly_spend.plot(ax=ax2, marker='o', color='green')
+    ax2.set_title("Weekly Spend (USD)", fontsize=14)
+    ax2.set_xlabel("Week", fontsize=10)
+    ax2.set_ylabel("USD", fontsize=10)
+    ax2.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+    ax2.tick_params(axis='x', labelrotation=30, labelsize=9)
+    ax2.grid(True, linestyle='--', alpha=0.4)
+    st.pyplot(fig2)
 
 # ⏱ Time Analysis
 with tab2:
