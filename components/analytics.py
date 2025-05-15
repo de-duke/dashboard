@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
 def render(df_total):
-    st.header("📈 Analytics (Completed + Pending)")
+    st.header("📈 Analytics")
     df = df_total.copy()
 
     # ✅ 날짜 전처리
