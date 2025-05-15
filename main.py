@@ -6,6 +6,8 @@ from components import overview, time_analysis, country, retention, merchants, a
 df = load_data()
 df_completed = df[df["spend.status"] == "completed"]
 df_pending = df[df["spend.status"] == "pending"]
+df_total = pd.concat([df_completed, df_pending], ignore_index=True)
+
 
 # ✅ 탭 구성
 tabs = st.tabs([
@@ -34,4 +36,4 @@ with tabs[4]:
     merchants.render(df_completed)
 
 with tabs[5]: 
-    analytics.render(df_completed)
+    analytics.render(df_total)
