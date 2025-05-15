@@ -156,32 +156,6 @@ def render(df_total):
         ax4.set_title("Tx Count Distribution per Day")
         st.pyplot(fig4)
 
-        # 유저별 일일 지출 합계
-    daily_user_spend = df.groupby(["date", "spend.userEmail"])["spend.amount_usd"].sum().reset_index()
-    pivot_spend = daily_user_spend.pivot(columns="date", values="spend.amount_usd")
-    
-    # 유저별 일일 tx 횟수
-    daily_user_tx = df.groupby(["date", "spend.userEmail"]).size().reset_index(name="tx_count")
-    pivot_tx = daily_user_tx.pivot(columns="date", values="tx_count")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("💳 Daily Spend per User (Boxplot)")
-        fig_spend, ax_spend = plt.subplots(figsize=(7, 3))
-        pivot_spend.plot.box(ax=ax_spend, rot=30)
-        ax_spend.set_ylabel("USD")
-        ax_spend.set_title("Spend Distribution per Day")
-        st.pyplot(fig_spend)
-    
-    with col2:
-        st.subheader("🧾 Daily Tx Count per User (Boxplot)")
-        fig_tx, ax_tx = plt.subplots(figsize=(7, 3))
-        pivot_tx.plot.box(ax=ax_tx, rot=30)
-        ax_tx.set_ylabel("Tx Count")
-        ax_tx.set_title("Tx Count Distribution per Day")
-        st.pyplot(fig_tx)
-
     st.divider()
 
     # ✅ 📅 Weekly Summary Section
