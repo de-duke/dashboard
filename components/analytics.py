@@ -33,9 +33,14 @@ def render(df_total):
     col1, col2 = st.columns(2)
     col1.metric("Avg per Tx", f"${avg_per_tx:,.2f}")
     col2.metric("Avg per User", f"${avg_per_user:,.2f}")
+
+    # ✅ 충분한 공간 아래에서 caption 출력
+    st.markdown("##### ℹ️ Breakdown")
     st.caption(f"🔹 Total Spend: ${total_spend:,.2f}")
     st.caption(f"🔹 Total Tx: {total_tx:,}")
     st.caption(f"🔹 Unique Users: {total_users:,}")
+
+    st.write("📦 Debug totals", total_spend, total_tx, total_users)
 
     # ✅ 주간 요약 계산
     st.subheader("📊 Weekly Summary")
