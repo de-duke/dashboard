@@ -12,8 +12,8 @@ import os
 
 st.set_page_config(layout="wide")
 
-SUPABASE_URL = os.getenv("SUPABASE_URL") or "https://yadsjoudwijtqnyfasat.supabase.co"
-SUPABASE_KEY = os.getenv("SUPABASE_KEY") or "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhZHNqb3Vkd2lqdHFueWZhc2F0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxMzkzNjQsImV4cCI6MjA2MjcxNTM2NH0.DnLQo1bXrGQOsdUc_km3zKL5KXRXQxxzpRIfQbVhqVk"
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ✅ 모든 데이터 페이징 방식으로 수집
