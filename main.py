@@ -34,4 +34,4 @@ with tabs[4]:
     merchants.render(df_completed)
 
 with tabs[5]: 
-    analytics.render(df)
+    analytics.render(df_completed)
