@@ -31,24 +31,63 @@ def render(df_total):
     col1.metric("Average per Transaction", f"${avg_per_tx:,.2f}")
     col2.metric("Average per User", f"${avg_per_user:,.2f}")
 
-    # ✅ Points Conversion Rate (if applicable)
-    st.subheader("📦 Sample: Points Conversion Rate")
 
-    if "type" in df.columns:
-        earned = df[df["type"] == "points_earned"]["spend.userEmail"].nunique()
-        used = df[df["type"] == "points_redeemed"]["spend.userEmail"].nunique()
-        if earned:
-            pct = (used / earned) * 100
-            st.metric("Points Conversion Rate", f"{pct:.1f}%")
-        else:
-            st.info("No point earning records found.")
-    else:
-        st.warning("No 'type' column in dataset")
+def weekly_user_spend_stats(df):
+    st.header("📊 Weekly User & Spend Summary")
 
-    # ✅ Country Concentration
-    st.subheader("🌍 Top 3 Country Concentration")
-    country_counts = df["spend.merchantCountry"].value_counts()
-    top3 = (country_counts.head(3).sum() / country_counts.sum()) * 100 if not country_counts.empty else 0
-    st.metric("Top 3 Countries", f"{top3:.1f}%")
+    # ✅ 주 단위 계산 전 준비
+    df["week"] = pd.to_datetime(df["date_utc"]).dt.to_period("W").astype(str)
 
-    st.bar_chart(country_counts.head(10))
+    # ✅ 주별 집계
+    weekly_stats = df.groupby("week").agg(
+        user_count=("spend.userEmail", "nunique"),
+        total_tx=("spend.amount_usd", "count"),
+        total_spend=("spend.amount_usd", "sum")
+    ).reset_index()
+
+    # ✅ 파생 지표 계산
+    weekly_stats["avg_per_user"] = weekly_stats["total_spend"] / weekly_stats["user_count"]
+    weekly_stats["avg_per_tx"] = weekly_stats["total_spend"] / weekly_stats["total_tx"]
+
+    # ✅ 그래프 출력
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("👥 Weekly Unique Users")
+        fig1, ax1 = plt.subplots(figsize=(7, 3))
+        ax1.plot(weekly_stats["week"], weekly_stats["user_count"], marker='o')
+        ax1.set_title("Unique Users per Week")
+        ax1.set_ylabel("Users")
+        ax1.tick_params(axis='x', rotation=30)
+        ax1.grid(True, linestyle='--', alpha=0.4)
+        st.pyplot(fig1)
+
+        st.subheader("🧾 Weekly Tx Count")
+        fig2, ax2 = plt.subplots(figsize=(7, 3))
+        ax2.plot(weekly_stats["week"], weekly_stats["total_tx"], marker='o', color='darkorange')
+        ax2.set_title("Total Transactions per Week")
+        ax2.set_ylabel("Tx Count")
+        ax2.tick_params(axis='x', rotation=30)
+        ax2.grid(True, linestyle='--', alpha=0.4)
+        st.pyplot(fig2)
+
+    with col2:
+        st.subheader("💳 Avg Spend per User")
+        fig3, ax3 = plt.subplots(figsize=(7, 3))
+        ax3.plot(weekly_stats["week"], weekly_stats["avg_per_user"], marker='o', color='green')
+        ax3.set_title("Avg Spend/User")
+        ax3.set_ylabel("USD")
+        ax3.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+        ax3.tick_params(axis='x', rotation=30)
+        ax3.grid(True, linestyle='--', alpha=0.4)
+        st.pyplot(fig3)
+
+        st.subheader("💸 Avg Spend per Tx")
+        fig4, ax4 = plt.subplots(figsize=(7, 3))
+        ax4.plot(weekly_stats["week"], weekly_stats["avg_per_tx"], marker='o', color='seagreen')
+        ax4.set_title("Avg Spend/Tx")
+        ax4.set_ylabel("USD")
+        ax4.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+        ax4.tick_params(axis='x', rotation=30)
+        ax4.grid(True, linestyle='--', alpha=0.4)
+        st.pyplot(fig4)
