@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from utils.supabase import load_data
 from components import overview, time_analysis, country, retention, merchants, analytics
 
