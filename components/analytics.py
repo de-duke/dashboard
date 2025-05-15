@@ -3,14 +3,17 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
-def render(df_completed):
-    st.header("📈 Analytics")
+def render(df_total):
+    st.header("📈 Analytics (Completed + Pending)")
 
-    st.subheader("📊 Daily Active Users (DAU)")
+    df = df_total.copy()
     df["date"] = pd.to_datetime(df["spend.authorizedAt"]).dt.date
-    dau = df.groupby("date")["spend.userEmail"].nunique()
 
+    # ✅ DAU
+    st.subheader("📊 Daily Active Users (DAU)")
+    dau = df.groupby("date")["spend.userEmail"].nunique()
     st.metric("Latest DAU", f"{dau.iloc[-1]:,}")
+
     fig1, ax1 = plt.subplots(figsize=(10, 3))
     dau.tail(30).plot(ax=ax1, color="royalblue", marker="o")
     ax1.set_title("DAU (Past 30 Days)")
@@ -19,6 +22,7 @@ def render(df_completed):
     plt.xticks(rotation=30)
     st.pyplot(fig1)
 
+    # ✅ Spend Averages
     st.subheader("💰 Spend Averages")
     avg_per_tx = df["spend.amount_usd"].mean()
     avg_per_user = df.groupby("spend.userEmail")["spend.amount_usd"].sum().mean()
@@ -27,23 +31,24 @@ def render(df_completed):
     col1.metric("Average per Transaction", f"${avg_per_tx:,.2f}")
     col2.metric("Average per User", f"${avg_per_user:,.2f}")
 
-    st.subheader("📦 Sample: Points Conversion Rate (if data available)")
+    # ✅ Points Conversion Rate (if applicable)
+    st.subheader("📦 Sample: Points Conversion Rate")
 
     if "type" in df.columns:
-        total_point_earners = df[df["type"] == "points_earned"]["spend.userEmail"].nunique()
-        total_point_users = df[df["type"] == "points_redeemed"]["spend.userEmail"].nunique()
-        if total_point_earners:
-            point_conversion_rate = (total_point_users / total_point_earners) * 100
-            st.metric("Points Conversion Rate", f"{point_conversion_rate:.1f}%")
+        earned = df[df["type"] == "points_earned"]["spend.userEmail"].nunique()
+        used = df[df["type"] == "points_redeemed"]["spend.userEmail"].nunique()
+        if earned:
+            pct = (used / earned) * 100
+            st.metric("Points Conversion Rate", f"{pct:.1f}%")
         else:
             st.info("No point earning records found.")
     else:
-        st.warning("No 'type' column in data. Skipping points analysis.")
+        st.warning("No 'type' column in dataset")
 
-    st.subheader("🌍 Country Concentration")
-
+    # ✅ Country Concentration
+    st.subheader("🌍 Top 3 Country Concentration")
     country_counts = df["spend.merchantCountry"].value_counts()
-    top3_share = (country_counts.head(3).sum() / country_counts.sum()) * 100
-    st.metric("Top 3 Countries Concentration", f"{top3_share:.1f}%")
+    top3 = (country_counts.head(3).sum() / country_counts.sum()) * 100 if not country_counts.empty else 0
+    st.metric("Top 3 Countries", f"{top3:.1f}%")
 
     st.bar_chart(country_counts.head(10))
