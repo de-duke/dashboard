@@ -22,6 +22,29 @@ def render(df_total):
     plt.xticks(rotation=30)
     st.pyplot(fig1)
 
+
+    # ✅ Spend Averages
+st.subheader("💰 Spend Averages")
+
+# 총합 지표 계산
+total_spend = df["spend.amount_usd"].sum()
+total_tx = df.shape[0]
+total_users = df["spend.userEmail"].nunique()
+
+# 평균 계산
+avg_per_tx = total_spend / total_tx if total_tx else 0
+avg_per_user = total_spend / total_users if total_users else 0
+
+# ✅ 주요 요약 카드 표시
+col1, col2 = st.columns(2)
+col1.metric("Average per Transaction", f"${avg_per_tx:,.2f}")
+col2.metric("Average per User", f"${avg_per_user:,.2f}")
+
+# ✅ 계산 근거 텍스트 표시
+st.caption(f"🔹 Total Spend: **${total_spend:,.2f}**")
+st.caption(f"🔹 Total Transactions: **{total_tx:,}**")
+st.caption(f"🔹 Unique Users: **{total_users:,}**")
+
     # ✅ Spend Averages
     st.subheader("💰 Spend Averages")
     avg_per_tx = df["spend.amount_usd"].mean()
