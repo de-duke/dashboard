@@ -13,7 +13,7 @@ def render(df, df_completed, df_pending):
     col1, col2, col3 = st.columns(3)
     col1.metric("Total Transactions", len(df_total))
     col2.metric("Total Volume (USD)", f"${df_total['spend.amount_usd'].sum():,.2f}")
-    col3.metric("Unique Users", df_total["spend.userEmail"].nunique())
+    col3.metric("Unique Users", df_total["spend.userID"].nunique())
 
     # ✅ 고급 지표 계산
     weekly_tx = df.groupby(["spend.userEmail", "week"]).size().reset_index(name="tx_count")
