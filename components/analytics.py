@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
-def render(df):
+def render(df_completed):
     st.header("📈 Analytics")
 
     st.subheader("📊 Daily Active Users (DAU)")
