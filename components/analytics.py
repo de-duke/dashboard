@@ -22,36 +22,36 @@ def render(df_total):
     ax1.grid(True, linestyle='--', alpha=0.4)
     st.pyplot(fig1)
 
-# ✅ Daily Spend & Transaction Count
-st.subheader("📊 Daily Spend & Transactions")
-
-daily_stats = df.groupby("date").agg(
-    total_spend=("spend.amount_usd", "sum"),
-    tx_count=("spend.amount_usd", "count")
-).reset_index()
-
-col1, col2 = st.columns(2)
-
-with col1:
-    st.subheader("💰 Daily Total Spend")
-    fig_spend, ax_spend = plt.subplots(figsize=(7, 3))
-    ax_spend.plot(daily_stats["date"], daily_stats["total_spend"], marker='o', color='blue')
-    ax_spend.set_title("Daily Total Spend")
-    ax_spend.set_ylabel("USD")
-    ax_spend.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
-    ax_spend.tick_params(axis='x', rotation=30)
-    ax_spend.grid(True, linestyle="--", alpha=0.4)
-    st.pyplot(fig_spend)
-
-with col2:
-    st.subheader("🧾 Daily Transaction Count")
-    fig_tx, ax_tx = plt.subplots(figsize=(7, 3))
-    ax_tx.plot(daily_stats["date"], daily_stats["tx_count"], marker='o', color='orange')
-    ax_tx.set_title("Daily Transaction Count")
-    ax_tx.set_ylabel("Tx Count")
-    ax_tx.tick_params(axis='x', rotation=30)
-    ax_tx.grid(True, linestyle="--", alpha=0.4)
-    st.pyplot(fig_tx)
+    # ✅ Daily Spend & Transaction Count
+    st.subheader("📊 Daily Spend & Transactions")
+    
+    daily_stats = df.groupby("date").agg(
+        total_spend=("spend.amount_usd", "sum"),
+        tx_count=("spend.amount_usd", "count")
+    ).reset_index()
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("💰 Daily Total Spend")
+        fig_spend, ax_spend = plt.subplots(figsize=(7, 3))
+        ax_spend.plot(daily_stats["date"], daily_stats["total_spend"], marker='o', color='blue')
+        ax_spend.set_title("Daily Total Spend")
+        ax_spend.set_ylabel("USD")
+        ax_spend.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+        ax_spend.tick_params(axis='x', rotation=30)
+        ax_spend.grid(True, linestyle="--", alpha=0.4)
+        st.pyplot(fig_spend)
+    
+    with col2:
+        st.subheader("🧾 Daily Transaction Count")
+        fig_tx, ax_tx = plt.subplots(figsize=(7, 3))
+        ax_tx.plot(daily_stats["date"], daily_stats["tx_count"], marker='o', color='orange')
+        ax_tx.set_title("Daily Transaction Count")
+        ax_tx.set_ylabel("Tx Count")
+        ax_tx.tick_params(axis='x', rotation=30)
+        ax_tx.grid(True, linestyle="--", alpha=0.4)
+        st.pyplot(fig_tx)
 
     
     # ✅ Spend Averages
