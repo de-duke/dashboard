@@ -9,7 +9,7 @@ def render(df_total):
     df = df_total.copy()
     df["date"] = pd.to_datetime(df["spend.authorizedAt"]).dt.date
 
-    # ✅ DAU
+    # ✅ Daily Active Users (DAU)
     st.subheader("📊 Daily Active Users (DAU)")
     dau = df.groupby("date")["spend.userEmail"].nunique()
     st.metric("Latest DAU", f"{dau.iloc[-1]:,}")
@@ -31,25 +31,28 @@ def render(df_total):
     col1.metric("Average per Transaction", f"${avg_per_tx:,.2f}")
     col2.metric("Average per User", f"${avg_per_user:,.2f}")
 
+    # ✅ Weekly User & Spend Stats (호출)
+    weekly_user_spend_stats(df)
 
+# ✅ 주간 유저/지출 지표 함수
 def weekly_user_spend_stats(df):
     st.header("📊 Weekly User & Spend Summary")
 
-    # ✅ 주 단위 계산 전 준비
+    # ✅ 주 단위 준비
     df["week"] = pd.to_datetime(df["date_utc"]).dt.to_period("W").astype(str)
 
-    # ✅ 주별 집계
+    # ✅ 집계
     weekly_stats = df.groupby("week").agg(
         user_count=("spend.userEmail", "nunique"),
         total_tx=("spend.amount_usd", "count"),
         total_spend=("spend.amount_usd", "sum")
     ).reset_index()
 
-    # ✅ 파생 지표 계산
+    # ✅ 파생 지표
     weekly_stats["avg_per_user"] = weekly_stats["total_spend"] / weekly_stats["user_count"]
     weekly_stats["avg_per_tx"] = weekly_stats["total_spend"] / weekly_stats["total_tx"]
 
-    # ✅ 그래프 출력
+    # ✅ 시각화
     col1, col2 = st.columns(2)
 
     with col1:
