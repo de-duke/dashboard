@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 
-def render(df_total):
+def render(df, df_total):
     st.header("⏱ Time-based Analysis")
 
     # 거래 상태별 필터링
     df_completed = df_total[df_total["spend.status"] == "completed"]
     df_pending = df_total[df_total["spend.status"] == "pending"]
-    df_all = df_total.copy()
+    df_all = df.copy()
 
 
     # ✅ 시간대별 소비 합계
