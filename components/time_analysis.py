@@ -3,8 +3,13 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import pandas as pd
 
-def render(df_completed, df_pending):
+def render(df_total):
     st.header("⏱ Time-based Analysis")
+
+    # 거래 상태별 필터링
+    df_completed = df_total[df_total["spend.status"] == "completed"]
+    df_pending = df_total[df_total["spend.status"] == "pending"]
+    df_all = df_total.copy()  # 전체 상태 포함
 
     # ✅ 시간대별 소비 합계
     st.subheader("⏰ Hourly Spend (UTC)")
@@ -47,22 +52,16 @@ def render(df_completed, df_pending):
     fig.tight_layout()
     st.pyplot(fig)
 
-
     # ✅ 일자별 거래 상태별 금액 (stacked bar)
     st.subheader("📊 Daily Spend by Status (UTC)")
 
-    # 필요한 상태 목록 정의
-    df_all = pd.concat([df_completed, df_pending])
     status_order = ["completed", "pending", "reversed", "declined"]
 
-    # 일자별 상태별 금액 합계
     daily_status_spend = df_all.groupby(["date_utc", "spend.status"])["spend.amount_usd"].sum().unstack(fill_value=0)
-
-    # 모든 상태 컬럼이 보장되도록 정렬
     for status in status_order:
         if status not in daily_status_spend.columns:
             daily_status_spend[status] = 0
-    daily_status_spend = daily_status_spend[status_order]  # 컬럼 순서 고정
+    daily_status_spend = daily_status_spend[status_order]
 
     fig, ax = plt.subplots(figsize=(10, 5))
     daily_status_spend.plot(kind="bar", stacked=True, ax=ax,
@@ -78,19 +77,10 @@ def render(df_completed, df_pending):
     # ✅ 일자별 상태별 거래 수 집계 (표로 출력)
     st.subheader("📋 Daily Transaction Count by Status (UTC)")
 
-    # 모든 상태 포함된 데이터프레임 생성
-    df_all = pd.concat([df_completed, df_pending])
-
-    # 상태별 일자별 거래 수 집계
     daily_status_count = df_all.groupby(["date_utc", "spend.status"]).size().unstack(fill_value=0)
-
-    # 보기 좋게 컬럼 순서 정리
-    status_order = ["completed", "pending", "reversed", "declined"]
     for status in status_order:
         if status not in daily_status_count.columns:
             daily_status_count[status] = 0
     daily_status_count = daily_status_count[status_order]
-
-    # 인덱스 리셋 및 출력
     daily_status_count = daily_status_count.reset_index()
     st.dataframe(daily_status_count.style.format(precision=0), use_container_width=True)
