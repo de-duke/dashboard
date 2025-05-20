@@ -9,7 +9,7 @@ def render(df_total):
     # 거래 상태별 필터링
     df_completed = df_total[df_total["spend.status"] == "completed"]
     df_pending = df_total[df_total["spend.status"] == "pending"]
-    df_all = df_total.copy()  # 전체 상태 포함
+    df_total = df.copy()  # ✅ 전체 상태 포함
 
     # ✅ 시간대별 소비 합계
     st.subheader("⏰ Hourly Spend (UTC)")
