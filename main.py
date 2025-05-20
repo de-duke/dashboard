@@ -26,7 +26,7 @@ with tabs[0]:
     overview.render(df, df_completed, df_pending)
 
 with tabs[1]:
-    time_analysis.render(df_completed, df_pending)
+    time_analysis.render(df_totalg)
 
 with tabs[2]:
     country.render(df_completed, df_pending)
