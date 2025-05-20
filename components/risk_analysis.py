@@ -2,67 +2,47 @@ import streamlit as st
 import pandas as pd
 
 def render(df):
-    st.header("🛑 Risk & Abuse Detection")
+    st.header("🛑 Risk & Abuse Detection (Supabase 기반)")
 
-
-    # 상태 분포 확인
-    st.write("✅ 상태 분포 확인", df["spend.status"].value_counts())
-
-    # 유니크 user_id 수
-    st.write("✅ 유저 수", df["user_id"].nunique())
-
-    # 취소된 거래 수
-    cancelled_count = (df["spend.status"] == "cancelled").sum()
-    failed_count = (df["spend.status"] == "failed").sum()
-    st.write(f"🚨 Cancelled: {cancelled_count:,}, Failed: {failed_count:,}")
-
-    # ✅ timestamp 파싱
+    # ✅ 시간 파싱
     df["timestamp"] = pd.to_datetime(df["spend.authorizedAt"])
 
-    # ✅ 사용자 식별자 선택 (user_id 또는 spend.userEmail)
-    user_col = "user_id" if "user_id" in df.columns else "spend.userEmail"
+    # ✅ 사용자 기준 컬럼
+    user_col = "spend.userId"
 
-    # ✅ 1. 사용자별 취소율
+    # ✅ 상태 정리 (소문자, 공백 제거)
+    df["spend.status"] = df["spend.status"].astype(str).str.strip().str.lower()
+
+    # ✅ 1. 사용자별 취소율 (reversed 기준)
     cancel_rate = (
         df.groupby(user_col)
-        .apply(lambda x: (x["spend.status"] == "cancelled").sum() / len(x))
+        .apply(lambda x: (x["spend.status"] == "reversed").sum() / len(x))
         .reset_index(name="cancel_rate")
     )
 
-    # ✅ 2. 빠른 취소 감지는 불가능 (cancelled_at 필드 없음)
-    st.info("🚫 'cancelled_at' 필드가 없어 빠른 취소 감지는 생략됩니다.")
+    # ✅ 2. 실패율 높은 사용자 (declined 기준)
+    fail_rate = (
+        df.groupby(user_col)
+        .apply(lambda x: (x["spend.status"] == "declined").sum() / len(x))
+        .reset_index(name="fail_rate")
+    )
 
-    # ✅ 3. 연속 취소 횟수 계산 (cancel_streak)
+    # ✅ 3. 연속 취소 탐지
     df_sorted = df.sort_values([user_col, "timestamp"])
-    df_sorted["is_cancel"] = df_sorted["spend.status"] == "cancelled"
+    df_sorted["is_cancel"] = df_sorted["spend.status"] == "reversed"
     df_sorted["cancel_streak"] = (
         df_sorted.groupby(user_col)["is_cancel"]
         .transform(lambda x: x.cumsum() - x.cumsum().where(~x).ffill().fillna(0))
     )
 
-    # ✅ 4. 실패율 높은 사용자
-    fail_rate = (
-        df.groupby(user_col)
-        .apply(lambda x: (x["spend.status"] == "failed").sum() / len(x))
-        .reset_index(name="fail_rate")
-    )
-
-    # ✅ 5. 이상 시간대 거래 (새벽 1시~4시)
-    df["hour"] = df["timestamp"].dt.hour
-    late_night_tx = df[df["hour"].isin(range(1, 5))]
-
-    # ✅ 사용자별 취소율 + 실패율 요약
+    # ✅ 📊 취소율/실패율 요약 테이블
     st.subheader("📊 사용자별 취소율 / 실패율")
     summary = cancel_rate.merge(fail_rate, on=user_col)
-    st.dataframe(summary.sort_values("cancel_rate", ascending=False).head(20))
-
-    # ✅ 새벽 시간대 거래
-    st.subheader("🌙 새벽 시간대 거래 (1AM–4AM)")
     st.dataframe(
-        late_night_tx[[user_col, "timestamp", "spend.status", "spend.amount_usd"]].head(20)
+        summary.sort_values(["cancel_rate", "fail_rate"], ascending=False).head(20)
     )
 
-    # ✅ 연속 취소 내역 (상위 유저만)
+    # ✅ 📈 연속 취소 유저 예시
     st.subheader("📈 사용자별 연속 취소 횟수 예시")
     streak_df = df_sorted[df_sorted["cancel_streak"] > 1]
     st.dataframe(
