@@ -104,6 +104,39 @@ def render(df, df_total):
     ax.grid(True, linestyle='--', alpha=0.4)
     st.pyplot(fig)
 
+
+        # ✅ 상태별 음수 Spend만 누적한 그래프
+    st.subheader("📉 Daily Negative Spend by Status (Only Negative Amounts)")
+
+    # 음수만 필터링
+    df_negative = df_all[df_all["spend.amount_usd"] < 0]
+
+    # 일자별 상태별 음수 금액 합계
+    daily_negative_spend = (
+        df_negative.groupby(["date_utc", "spend.status"])["spend.amount_usd"]
+        .sum()
+        .unstack(fill_value=0)
+    )
+
+    # 시각화 대상 상태 순서 고정
+    for status in status_order:
+        if status not in daily_negative_spend.columns:
+            daily_negative_spend[status] = 0
+    daily_negative_spend = daily_negative_spend[status_order]
+
+    # 음수 누적 막대 시각화
+    fig, ax = plt.subplots(figsize=(10, 5))
+    daily_negative_spend.plot(kind="bar", stacked=True, ax=ax,
+                              color=["green", "orange", "gray", "red"])
+    ax.axhline(0, color='black', linewidth=1)
+    ax.set_title("Daily Negative Spend by Status")
+    ax.set_xlabel("Date (UTC)")
+    ax.set_ylabel("Negative Spend (USD)")
+    ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+    ax.tick_params(axis='x', rotation=45)
+    ax.grid(True, linestyle='--', alpha=0.4)
+    st.pyplot(fig)
+
     # ✅ 거래 상태별 일자별 건수 테이블 출력
     st.subheader("📋 Daily Transaction Count by Status (Table)")
     st.dataframe(daily_status_count.style.format(precision=0), use_container_width=True)
