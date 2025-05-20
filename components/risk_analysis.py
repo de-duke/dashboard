@@ -2,32 +2,32 @@ import streamlit as st
 import pandas as pd
 
 def render(df):
-    st.header("🛑 Risk & Abuse Detection (Supabase 기반)")
+    st.header("🛑 Risk & Abuse Detection")
 
-    # ✅ 시간 파싱
+    # Parse timestamps
     df["timestamp"] = pd.to_datetime(df["spend.authorizedAt"])
 
-    # ✅ 사용자 기준 컬럼
+    # Set user ID column
     user_col = "spend.userId"
 
-    # ✅ 상태 정리 (소문자, 공백 제거)
+    # Normalize status field
     df["spend.status"] = df["spend.status"].astype(str).str.strip().str.lower()
 
-    # ✅ 1. 사용자별 취소율 (reversed 기준)
+    # 1. Cancel rate (reversed)
     cancel_rate = (
         df.groupby(user_col)
         .apply(lambda x: (x["spend.status"] == "reversed").sum() / len(x))
         .reset_index(name="cancel_rate")
     )
 
-    # ✅ 2. 실패율 높은 사용자 (declined 기준)
+    # 2. Fail rate (declined)
     fail_rate = (
         df.groupby(user_col)
         .apply(lambda x: (x["spend.status"] == "declined").sum() / len(x))
         .reset_index(name="fail_rate")
     )
 
-    # ✅ 3. 연속 취소 탐지
+    # 3. Consecutive cancel streak
     df_sorted = df.sort_values([user_col, "timestamp"])
     df_sorted["is_cancel"] = df_sorted["spend.status"] == "reversed"
     df_sorted["cancel_streak"] = (
@@ -35,16 +35,38 @@ def render(df):
         .transform(lambda x: x.cumsum() - x.cumsum().where(~x).ffill().fillna(0))
     )
 
-    # ✅ 📊 취소율/실패율 요약 테이블
-    st.subheader("📊 사용자별 취소율 / 실패율")
-    summary = cancel_rate.merge(fail_rate, on=user_col)
+    # 4. Cancel & fail amount per user
+    cancel_amount = df[df["spend.status"] == "reversed"].groupby(user_col)["spend.amount_usd"].sum().reset_index(name="cancel_amount_usd")
+    fail_amount = df[df["spend.status"] == "declined"].groupby(user_col)["spend.amount_usd"].sum().reset_index(name="fail_amount_usd")
+
+    # 5. Merge all into summary
+    summary = cancel_rate.merge(fail_rate, on=user_col)\
+                         .merge(cancel_amount, on=user_col, how="left")\
+                         .merge(fail_amount, on=user_col, how="left")\
+                         .fillna(0)
+
+    # 6. Identify suspicious users
+    suspicious = summary[
+        (summary["cancel_rate"] > 0.3) | (summary["fail_rate"] > 0.2)
+    ]
+    total_users = df[user_col].nunique()
+    suspicious_users = suspicious[user_col].nunique()
+    suspicious_pct = (suspicious_users / total_users) * 100 if total_users else 0
+
+    # 📊 Cancel / Fail Rate Summary
+    st.subheader("📊 Cancel / Fail Rate Summary (Top 20)")
+    st.caption(f"⚠️ Suspicious users: **{suspicious_users:,} / {total_users:,}** → **{suspicious_pct:.1f}%**")
+
     st.dataframe(
-        summary.sort_values(["cancel_rate", "fail_rate"], ascending=False).head(20)
+        summary.sort_values(["cancel_rate", "fail_rate"], ascending=False)
+               .head(20)[[user_col, "cancel_rate", "fail_rate", "cancel_amount_usd", "fail_amount_usd"]]
     )
 
-    # ✅ 📈 연속 취소 유저 예시
-    st.subheader("📈 사용자별 연속 취소 횟수 예시")
-    streak_df = df_sorted[df_sorted["cancel_streak"] > 1]
+    # 📈 Consecutive Cancel Streaks
+    st.subheader("📈 Users with Consecutive Cancelled Transactions (≥2)")
+    streak_df = df_sorted[df_sorted["cancel_streak"] >= 2]
     st.dataframe(
-        streak_df[[user_col, "timestamp", "spend.status", "cancel_streak"]].head(20)
+        streak_df[[user_col, "timestamp", "spend.status", "cancel_streak"]]
+        .sort_values(["cancel_streak", "timestamp"], ascending=[False, True])
+        .head(20)
     )
