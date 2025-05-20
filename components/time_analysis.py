@@ -91,13 +91,14 @@ def render(df, df_total):
 
     # ✅ 음수 포함된 Spend 그래프 (기준선 포함)
     st.subheader("📊 Daily Spend by Status (UTC, incl. negatives)")
-    fig, ax = plt.subplots(figsize=(10, 5))
-    daily_status_spend.plot(kind="bar", stacked=True, ax=ax,
-                            color=["green", "orange", "gray", "red"])
-    ax.axhline(0, color='black', linewidth=0.8)
-    ax.set_title("Daily Spend by Status (incl. negative amounts)")
-    ax.set_xlabel("Date (UTC)")
+    fig, ax = plt.subplots(figsize=(12, 6))
+    daily_status_spend[["completed", "pending", "reversed", "declined"]].plot(
+        kind="bar", stacked=False, ax=ax, color=["green", "orange", "gray", "red"]
+    )
+    ax.axhline(0, color='black', linewidth=1)
+    ax.set_title("Daily Spend by Status (incl. negatives, not stacked)")
     ax.set_ylabel("Spend (USD)")
+    ax.set_xlabel("Date (UTC)")
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
     ax.tick_params(axis='x', rotation=45)
     ax.grid(True, linestyle='--', alpha=0.4)
