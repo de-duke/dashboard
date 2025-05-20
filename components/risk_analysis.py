@@ -2,7 +2,19 @@ import streamlit as st
 import pandas as pd
 
 def render(df):
-    st.header("🛑 Risk & Abuse Detection (Supabase 기반)")
+    st.header("🛑 Risk & Abuse Detection")
+
+
+    # 상태 분포 확인
+    st.write("✅ 상태 분포 확인", df["spend.status"].value_counts())
+
+    # 유니크 user_id 수
+    st.write("✅ 유저 수", df["user_id"].nunique())
+
+    # 취소된 거래 수
+    cancelled_count = (df["spend.status"] == "cancelled").sum()
+    failed_count = (df["spend.status"] == "failed").sum()
+    st.write(f"🚨 Cancelled: {cancelled_count:,}, Failed: {failed_count:,}")
 
     # ✅ timestamp 파싱
     df["timestamp"] = pd.to_datetime(df["spend.authorizedAt"])
