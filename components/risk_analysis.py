@@ -70,3 +70,43 @@ def render(df):
         .sort_values(["cancel_streak", "timestamp"], ascending=[False, True])
         .head(20)
     )
+
+
+    st.subheader("🔍 Suspicious Transaction Patterns")
+    
+    # 1. Mirror transactions (same user, same abs amount, positive + negative)
+    df["abs_amount"] = df["amount_usd"].abs().round(2)
+    
+    mirror_tx_flag = (
+        df.groupby(["spend.userId", "abs_amount"])["amount_usd"]
+        .apply(lambda x: set(round(v, 2) for v in x) >= {x.max(), -x.max()})
+        .reset_index(name="mirror_flag")
+    )
+    
+    mirror_users = mirror_tx_flag[mirror_tx_flag["mirror_flag"] == True]["spend.userId"].unique()
+    mirror_tx_df = df[df["spend.userId"].isin(mirror_users)]
+    
+    st.markdown("**🔁 Users with matching positive & negative transactions (Mirror Tx)**")
+    st.dataframe(
+        mirror_tx_df[["spend.userId", "amount_usd", "status", "authorized_at"]]
+        .sort_values(["spend.userId", "authorized_at"])
+        .head(30)
+    )
+    
+    # 2. Repeated same-amount transactions on the same day (≥4)
+    df["date"] = pd.to_datetime(df["authorized_at"]).dt.date
+    
+    repeated_amount = (
+        df.groupby(["spend.userId", "amount_usd", "date"])
+        .size().reset_index(name="count")
+    )
+    
+    repeat_users = repeated_amount[repeated_amount["count"] >= 4]["spend.userId"].unique()
+    repeat_tx_df = df[df["spend.userId"].isin(repeat_users)]
+    
+    st.markdown("**🧾 Users with ≥4 repeated same-amount transactions per day**")
+    st.dataframe(
+        repeat_tx_df[["spend.userId", "amount_usd", "status", "authorized_at"]]
+        .sort_values(["spend.userId", "authorized_at"])
+        .head(30)
+    )
