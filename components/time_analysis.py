@@ -74,3 +74,23 @@ def render(df_completed, df_pending):
     ax.tick_params(axis='x', rotation=45)
     ax.grid(True, linestyle='--', alpha=0.4)
     st.pyplot(fig)
+
+    # ✅ 일자별 상태별 거래 수 집계 (표로 출력)
+    st.subheader("📋 Daily Transaction Count by Status (UTC)")
+
+    # 모든 상태 포함된 데이터프레임 생성
+    df_all = pd.concat([df_completed, df_pending])
+
+    # 상태별 일자별 거래 수 집계
+    daily_status_count = df_all.groupby(["date_utc", "spend.status"]).size().unstack(fill_value=0)
+
+    # 보기 좋게 컬럼 순서 정리
+    status_order = ["completed", "pending", "reversed", "declined"]
+    for status in status_order:
+        if status not in daily_status_count.columns:
+            daily_status_count[status] = 0
+    daily_status_count = daily_status_count[status_order]
+
+    # 인덱스 리셋 및 출력
+    daily_status_count = daily_status_count.reset_index()
+    st.dataframe(daily_status_count.style.format(precision=0), use_container_width=True)
