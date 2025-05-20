@@ -10,7 +10,7 @@ def render(df, df_total):
     df_completed = df_total[df_total["spend.status"] == "completed"]
     df_pending = df_total[df_total["spend.status"] == "pending"]
     df_all = df.copy()
-
+    status_order = ["completed", "pending", "reversed", "declined"]
 
     # ✅ 시간대별 소비 합계
     st.subheader("⏰ Hourly Spend (UTC)")
@@ -39,7 +39,6 @@ def render(df, df_total):
     ).reset_index()
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
-
     ax1.plot(daily_stats["date_utc"], daily_stats["tx_count"], marker='o', color='steelblue')
     ax1.set_ylabel("Transactions")
     ax1.grid(True, linestyle="--", alpha=0.5)
@@ -55,9 +54,6 @@ def render(df, df_total):
 
     # ✅ 일자별 거래 상태별 금액 (stacked bar)
     st.subheader("📊 Daily Spend by Status (UTC)")
-
-    status_order = ["completed", "pending", "reversed", "declined"]
-
     daily_status_spend = df_all.groupby(["date_utc", "spend.status"])["spend.amount_usd"].sum().unstack(fill_value=0)
     for status in status_order:
         if status not in daily_status_spend.columns:
@@ -65,8 +61,7 @@ def render(df, df_total):
     daily_status_spend = daily_status_spend[status_order]
 
     fig, ax = plt.subplots(figsize=(10, 5))
-    daily_status_spend.plot(kind="bar", stacked=True, ax=ax,
-                            color=["green", "orange", "gray", "red"])
+    daily_status_spend.plot(kind="bar", stacked=True, ax=ax, color=["green", "orange", "gray", "red"])
     ax.set_title("Daily Spend by Status")
     ax.set_xlabel("Date (UTC)")
     ax.set_ylabel("Spend (USD)")
@@ -75,13 +70,18 @@ def render(df, df_total):
     ax.grid(True, linestyle='--', alpha=0.4)
     st.pyplot(fig)
 
+    # ✅ 일자별 상태별 거래 수 집계 및 그래프 준비
+    daily_status_count = df_all.groupby(["date_utc", "spend.status"]).size().unstack(fill_value=0)
+    for status in status_order:
+        if status not in daily_status_count.columns:
+            daily_status_count[status] = 0
+    daily_status_count = daily_status_count[status_order].reset_index()
 
     # ✅ 일자별 상태별 거래 수 시각화 (그래프)
     st.subheader("📊 Daily Transaction Count by Status (UTC)")
-
     fig, ax = plt.subplots(figsize=(10, 5))
-    daily_status_count.set_index("date_utc")[status_order].plot(kind="bar", stacked=True, ax=ax,
-                                                                 color=["green", "orange", "gray", "red"])
+    daily_status_count.set_index("date_utc").plot(kind="bar", stacked=True, ax=ax,
+                                                  color=["green", "orange", "gray", "red"])
     ax.set_title("Daily Transaction Count by Status")
     ax.set_xlabel("Date (UTC)")
     ax.set_ylabel("Transaction Count")
@@ -89,14 +89,12 @@ def render(df, df_total):
     ax.grid(True, linestyle='--', alpha=0.4)
     st.pyplot(fig)
 
-
-        # ✅ 일자별 거래 상태별 금액 (stacked bar, 음수 포함)
+    # ✅ 음수 포함된 Spend 그래프 (기준선 포함)
     st.subheader("📊 Daily Spend by Status (UTC, incl. negatives)")
-
     fig, ax = plt.subplots(figsize=(10, 5))
     daily_status_spend.plot(kind="bar", stacked=True, ax=ax,
                             color=["green", "orange", "gray", "red"])
-    ax.axhline(0, color='black', linewidth=0.8)  # 기준선 추가
+    ax.axhline(0, color='black', linewidth=0.8)
     ax.set_title("Daily Spend by Status (incl. negative amounts)")
     ax.set_xlabel("Date (UTC)")
     ax.set_ylabel("Spend (USD)")
@@ -105,20 +103,10 @@ def render(df, df_total):
     ax.grid(True, linestyle='--', alpha=0.4)
     st.pyplot(fig)
 
-
-
-    
-    # ✅ 일자별 상태별 거래 수 집계 (표로 출력)
-    st.subheader("📋 Daily Transaction Count by Status (UTC)")
-
-    daily_status_count = df_all.groupby(["date_utc", "spend.status"]).size().unstack(fill_value=0)
-    for status in status_order:
-        if status not in daily_status_count.columns:
-            daily_status_count[status] = 0
-    daily_status_count = daily_status_count[status_order]
-    daily_status_count = daily_status_count.reset_index()
+    # ✅ 거래 상태별 일자별 건수 테이블 출력
+    st.subheader("📋 Daily Transaction Count by Status (Table)")
     st.dataframe(daily_status_count.style.format(precision=0), use_container_width=True)
 
-    
+    # ✅ 상태 확인용
     st.write("🔍 Unique spend.status values in df_all:")
     st.write(df_all["spend.status"].dropna().unique())
