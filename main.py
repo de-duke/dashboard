@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from utils.supabase import load_data
-from components import overview, time_analysis, country, retention, merchants, analytics
+from components import overview, time_analysis, country, retention, merchants, analytics, risk_analysis
 
 # ✅ 데이터 로드 (Supabase에서 전처리 포함)
 df = load_data()
@@ -17,7 +17,8 @@ tabs = st.tabs([
     "🌍 Country",
     "🧑 Retention",
     "🏪 Merchants & Users",
-    "📈 Analytics"
+    "📈 Analytics",
+    "🛑 Risk Analysis"
 ])
 
 # ✅ 탭별 렌더링
@@ -38,3 +39,6 @@ with tabs[4]:
 
 with tabs[5]: 
     analytics.render(df_total)
+
+with tabs[6]:
+    risk_analysis.render(df)
