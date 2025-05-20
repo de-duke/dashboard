@@ -75,6 +75,39 @@ def render(df, df_total):
     ax.grid(True, linestyle='--', alpha=0.4)
     st.pyplot(fig)
 
+
+    # ✅ 일자별 상태별 거래 수 시각화 (그래프)
+    st.subheader("📊 Daily Transaction Count by Status (UTC)")
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    daily_status_count.set_index("date_utc")[status_order].plot(kind="bar", stacked=True, ax=ax,
+                                                                 color=["green", "orange", "gray", "red"])
+    ax.set_title("Daily Transaction Count by Status")
+    ax.set_xlabel("Date (UTC)")
+    ax.set_ylabel("Transaction Count")
+    ax.tick_params(axis='x', rotation=45)
+    ax.grid(True, linestyle='--', alpha=0.4)
+    st.pyplot(fig)
+
+
+        # ✅ 일자별 거래 상태별 금액 (stacked bar, 음수 포함)
+    st.subheader("📊 Daily Spend by Status (UTC, incl. negatives)")
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    daily_status_spend.plot(kind="bar", stacked=True, ax=ax,
+                            color=["green", "orange", "gray", "red"])
+    ax.axhline(0, color='black', linewidth=0.8)  # 기준선 추가
+    ax.set_title("Daily Spend by Status (incl. negative amounts)")
+    ax.set_xlabel("Date (UTC)")
+    ax.set_ylabel("Spend (USD)")
+    ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+    ax.tick_params(axis='x', rotation=45)
+    ax.grid(True, linestyle='--', alpha=0.4)
+    st.pyplot(fig)
+
+
+
+    
     # ✅ 일자별 상태별 거래 수 집계 (표로 출력)
     st.subheader("📋 Daily Transaction Count by Status (UTC)")
 
