@@ -87,5 +87,5 @@ def render(df, df_total):
     st.dataframe(daily_status_count.style.format(precision=0), use_container_width=True)
 
     
-    st.write("🔍 Unique spend.status values in df_total:")
-    st.write(df_total["spend.status"].dropna().unique())
+    st.write("🔍 Unique spend.status values in df_all:")
+    st.write(df_all["spend.status"].dropna().unique())
