@@ -17,8 +17,7 @@ tabs = st.tabs([
     "🌍 Country",
     "🧑 Retention",
     "🏪 Merchants & Users",
-    "📈 Analytics",
-    "🛑 Risk Analysis"
+    "📈 Analytics"
 ])
 
 # ✅ 탭별 렌더링
@@ -39,6 +38,3 @@ with tabs[4]:
 
 with tabs[5]: 
     analytics.render(df_total)
-
-with tabs[6]:
-    risk_analysis.render(df)
