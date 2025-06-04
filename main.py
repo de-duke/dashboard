@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from utils.supabase import load_data
-from components import overview, time_analysis, country, retention, merchants, analytics, risk_analysis
+from components import overview, time_analysis, country, retention, merchants, analytics
 
 # ✅ 데이터 로드 (Supabase에서 전처리 포함)
 df = load_data()
