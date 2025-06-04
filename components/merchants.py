@@ -1,17 +1,30 @@
 import streamlit as st
 import pandas as pd
 
+# ✅ secrets.toml 에 저장된 관리자 비밀번호
+ADMIN_PASSWORD = st.secrets["admin"]["password"]
+
 def render(df_completed):
     st.header("🏪 Top Merchants & Users")
 
+    # ✅ 비밀번호 입력받기
+    pw_input = st.text_input("🔐 관리자 비밀번호를 입력하면 실제 User ID가 표시됩니다", type="password")
 
-    # ✅ 유저 ID에 익명 코드 부여
+    # ✅ 유저 ID 익명화 매핑
     unique_users = df_completed["spend.userId"].unique()
     anon_map = {uid: f"User {i+1:03d}" for i, uid in enumerate(unique_users)}
     df_completed["anon_user_id"] = df_completed["spend.userId"].map(anon_map)
 
-    # ✅ Top 20 Users by Spend (익명 아이디로 대체)
-    top_users = df_completed.groupby("anon_user_id")["spend.amount_usd"] \
+    # ✅ 표시할 유저 ID 컬럼 결정
+    if pw_input == ADMIN_PASSWORD:
+        st.success("✅ 관리자 인증 완료: 실제 유저 ID 표시 중")
+        user_col = "spend.userId"
+    else:
+        st.info("🕶️ 익명 유저 ID 표시 중")
+        user_col = "anon_user_id"
+
+    # ✅ Top 20 Users by Spend
+    top_users = df_completed.groupby(user_col)["spend.amount_usd"] \
         .sum().sort_values(ascending=False).head(20).reset_index()
     top_users.columns = ["User", "Total Spend (USD)"]
 
