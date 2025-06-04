@@ -8,7 +8,7 @@ def render(df_completed):
     st.header("🏪 Top Merchants & Users")
 
     # ✅ 비밀번호 입력받기
-    pw_input = st.text_input("🔐 관리자 비밀번호를 입력하면 실제 User ID가 표시됩니다", type="password")
+    pw_input = st.text_input("🔐 Enter the admin password to reveal actual User IDs", type="password")
 
     # ✅ 유저 ID 익명화 매핑
     unique_users = df_completed["spend.userId"].unique()
@@ -17,10 +17,10 @@ def render(df_completed):
 
     # ✅ 표시할 유저 ID 컬럼 결정
     if pw_input == ADMIN_PASSWORD:
-        st.success("✅ 관리자 인증 완료: 실제 유저 ID 표시 중")
+        st.success("✅ Admin verified: displaying actual User IDs")
         user_col = "spend.userId"
     else:
-        st.info("🕶️ 익명 유저 ID 표시 중")
+        st.info("🕶️  Displaying anonymized user IDs")
         user_col = "anon_user_id"
 
     # ✅ Top 20 Users by Spend
