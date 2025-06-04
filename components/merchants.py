@@ -15,13 +15,6 @@ def render(df_completed):
         .sum().sort_values(ascending=False).head(20).reset_index()
     top_users.columns = ["User", "Total Spend (USD)"]
 
-'''
-    # ✅ Top 20 Users by Total Spend
-    top_users = df_completed.groupby("spend.userId")["spend.amount_usd"] \
-        .sum().sort_values(ascending=False).head(20).reset_index()
-    top_users.columns = ["User Id", "Total Spend (USD)"]
-
-'''
     
     # ✅ Top 10 Merchants by Spend
     top_merchants_by_spend = df_completed.groupby("spend.merchantName")["spend.amount_usd"] \
