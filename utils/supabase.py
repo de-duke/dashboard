@@ -43,6 +43,7 @@ def load_data():
 
     df["spend.authorizedAt"] = pd.to_datetime(df["spend.authorizedAt"], errors="coerce")
     df["date_utc"] = df["spend.authorizedAt"].dt.date
+    df["date"] = df["spend.authorizedAt"].dt.date     # ✅ analytics.py 호환용
     df["hour_utc"] = df["spend.authorizedAt"].dt.hour
     df["week"] = pd.to_datetime(df["date_utc"]).dt.to_period("W").astype(str)
 
