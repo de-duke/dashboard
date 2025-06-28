@@ -2,13 +2,22 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import pycountry
+
+def get_country_name(code):
+    try:
+        return pycountry.countries.get(alpha_2=code).name
+    except:
+        return code
 
 def render(df):
     st.header("📅 Monthly Report")
 
     # ✅ 월 파싱
-    df["month"] = pd.to_datetime(df["spend.authorizedAt"]).dt.to_period("M").astype(str)
-    available_months = sorted(df["month"].unique(), reverse=True)
+    df["month"] = pd.to_datetime(df["spend.authorizedAt"], errors="coerce").dt.to_period("M")
+    df = df.dropna(subset=["month"])  # NaT 제거
+    df["month_str"] = df["month"].astype(str)
+    available_months = sorted(df["month_str"].unique(), reverse=True)
 
     # ✅ 월 선택
     selected_month = st.selectbox("📆 Select Month", available_months)
@@ -16,15 +25,15 @@ def render(df):
     prev_month = available_months[selected_idx + 1] if selected_idx + 1 < len(available_months) else None
 
     # ✅ 필터링
-    df_month = df[df["month"] == selected_month]
-    df_prev = df[df["month"] == prev_month] if prev_month else pd.DataFrame()
+    df_month = df[df["month_str"] == selected_month]
+    df_prev = df[df["month_str"] == prev_month] if prev_month else pd.DataFrame()
 
     # ✅ KPI 계산 함수
-    def calc_kpi(df):
+    def calc_kpi(d):
         return {
-            "total_spend": df["spend.amount_usd"].sum(),
-            "tx_count": df["spend.amount_usd"].count(),
-            "unique_users": df["spend.userEmail"].nunique()
+            "total_spend": d["spend.amount_usd"].sum(),
+            "tx_count": d["spend.amount_usd"].count(),
+            "unique_users": d["spend.userEmail"].nunique()
         }
 
     kpi = calc_kpi(df_month)
@@ -79,7 +88,7 @@ def render(df):
         ax2.grid(True, linestyle="--", alpha=0.4)
         st.pyplot(fig2)
 
-    # ✅ 신규 유저 (그 달에 처음 등장한 이메일 기준)
+    # ✅ 신규 유저
     df_all = df.copy()
     df_all["first_month"] = pd.to_datetime(df_all["spend.authorizedAt"]).dt.to_period("M").astype(str)
     user_first_month = df_all.groupby("spend.userEmail")["first_month"].min().reset_index()
@@ -99,9 +108,11 @@ def render(df):
 
     st.dataframe(top_merchants)
 
-    # ✅ Country Spend
+    # ✅ Country Spend (국가 이름 변환)
     st.markdown("### 🌍 Spend by Country")
-    country = df_month.groupby("spend.merchantCountry")["spend.amount_usd"].sum().sort_values(ascending=False).head(10)
+    df_month["country_name"] = df_month["spend.merchantCountry"].apply(get_country_name)
+    country = df_month.groupby("country_name")["spend.amount_usd"].sum().sort_values(ascending=False).head(10)
+
     fig3, ax3 = plt.subplots(figsize=(10, 3))
     country.plot(kind="bar", ax=ax3, color='royalblue')
     ax3.set_ylabel("USD")
@@ -109,3 +120,43 @@ def render(df):
     ax3.tick_params(axis='x', rotation=45)
     ax3.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
     st.pyplot(fig3)
+
+    st.divider()
+
+    # ✅ Spend by Merchant Category
+    st.markdown("### 🧾 Spend by Merchant Category")
+
+    # 카테고리 집계
+    cat_df = df_month.groupby("spend.merchantCategory").agg(
+        total_spend=("spend.amount_usd", "sum"),
+        tx_count=("spend.amount_usd", "count"),
+        user_count=("spend.userEmail", "nunique")
+    ).sort_values("total_spend", ascending=False).head(10).reset_index()
+
+    st.dataframe(cat_df)
+
+    # 시각화
+    fig4, ax4 = plt.subplots(figsize=(10, 4))
+    ax4.bar(cat_df["spend.merchantCategory"], cat_df["total_spend"], color="darkgreen")
+    ax4.set_title("Top 10 Merchant Categories by Spend")
+    ax4.set_ylabel("USD")
+    ax4.set_xlabel("Category")
+    ax4.tick_params(axis="x", rotation=45)
+    ax4.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"${x:,.0f}"))
+    st.pyplot(fig4)
+
+    fig5, ax5 = plt.subplots(figsize=(10, 4))
+    ax5.bar(cat_df["spend.merchantCategory"], cat_df["tx_count"], color="orange")
+    ax5.set_title("Top 10 Merchant Categories by Transaction Count")
+    ax5.set_ylabel("Transactions")
+    ax5.set_xlabel("Category")
+    ax5.tick_params(axis="x", rotation=45)
+    st.pyplot(fig5)
+
+    fig6, ax6 = plt.subplots(figsize=(10, 4))
+    ax6.bar(cat_df["spend.merchantCategory"], cat_df["user_count"], color="royalblue")
+    ax6.set_title("Top 10 Merchant Categories by Unique Users")
+    ax6.set_ylabel("Users")
+    ax6.set_xlabel("Category")
+    ax6.tick_params(axis="x", rotation=45)
+    st.pyplot(fig6)
