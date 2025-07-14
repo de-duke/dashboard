@@ -21,10 +21,8 @@ def get_country_name(code):
 def render(df_completed):
     st.header("🏪 Top Merchants & Users")
 
-    # ✅ 비밀번호 입력
     pw_input = st.text_input("Enter the admin password to view full user IDs", type="password")
 
-    # ✅ 익명화 처리
     unique_users = df_completed["spend.userId"].unique()
     anon_map = {uid: f"User {i+1:03d}" for i, uid in enumerate(unique_users)}
     df_completed["anon_user_id"] = df_completed["spend.userId"].map(anon_map)
@@ -43,7 +41,6 @@ def render(df_completed):
     )
     users_df["user_country"] = users_df["country_code"].apply(get_country_name)
 
-    # ✅ 유저 country 병합
     df_completed = df_completed.merge(
         users_df[["id", "user_country"]],
         left_on="spend.userId",
@@ -56,15 +53,11 @@ def render(df_completed):
     user_country_spend["rank"] = user_country_spend.groupby("spend.userId")["spend.amount_usd"].rank(method="first", ascending=False)
     top2_countries = user_country_spend[user_country_spend["rank"] <= 2].sort_values(["spend.userId", "rank"])
 
-    # ✅ Top 2 국가를 병합 (→ 국가 이름 변환 포함)
-    def map_codes_to_names(code_list):
-        return ", ".join([get_country_name(code) for code in code_list])
+    # ✅ 국가 코드 → 이름으로 변환
+    top2_countries["country_name"] = top2_countries["spend.merchantCountry"].apply(get_country_name)
 
-    country_list = (
-        top2_countries.groupby("spend.userId")["spend.merchantCountry"]
-        .apply(lambda x: map_codes_to_names(x.tolist()))
-        .reset_index()
-    )
+    # ✅ Top 2 국가 병합
+    country_list = top2_countries.groupby("spend.userId")["country_name"].apply(lambda x: ", ".join(x)).reset_index()
     country_list.columns = ["spend.userId", "top_countries_spent"]
 
     # ✅ Top 20 유저 집계
@@ -74,7 +67,6 @@ def render(df_completed):
         on="spend.userId", how="left"
     ).merge(country_list, on="spend.userId", how="left")
 
-    # ✅ 컬럼 구성
     top_users["User"] = top_users[user_col]
     top_users = top_users[["User", "spend.amount_usd", "user_country", "top_countries_spent"]]
     top_users.columns = ["User", "Total Spend (USD)", "User Country", "Top 2 Spend Countries"]
