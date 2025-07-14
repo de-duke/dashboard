@@ -56,8 +56,15 @@ def render(df_completed):
     user_country_spend["rank"] = user_country_spend.groupby("spend.userId")["spend.amount_usd"].rank(method="first", ascending=False)
     top2_countries = user_country_spend[user_country_spend["rank"] <= 2].sort_values(["spend.userId", "rank"])
 
-    # ✅ Top 2 국가를 병합
-    country_list = top2_countries.groupby("spend.userId")["spend.merchantCountry"].apply(lambda x: ", ".join(x)).reset_index()
+    # ✅ Top 2 국가를 병합 (→ 국가 이름 변환 포함)
+    def map_codes_to_names(code_list):
+        return ", ".join([get_country_name(code) for code in code_list])
+
+    country_list = (
+        top2_countries.groupby("spend.userId")["spend.merchantCountry"]
+        .apply(lambda x: map_codes_to_names(x.tolist()))
+        .reset_index()
+    )
     country_list.columns = ["spend.userId", "top_countries_spent"]
 
     # ✅ Top 20 유저 집계
